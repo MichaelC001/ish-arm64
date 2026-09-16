@@ -160,12 +160,18 @@ dword_t sys_prlimit64(pid_t_ pid, dword_t resource, addr_t new_limit_addr, addr_
     return 0;
 }
 
-// [T-ish-port-leak-probe] Implemented in Swift (ResourceDiagnostics). Declared
-// rather than included so this file keeps its current include set; they are
-// no-ops in any build that does not link them.
+// [T-ish-port-leak-probe] Mach-port accounting hooks for the embedding app.
+//
+// The real implementations live in the Minis app's Swift side
+// (ResourceDiagnostics, exported via @_cdecl) and exist only when this
+// translation unit is linked into that app. Weak no-op defaults here mean
+// every other target — the standalone native/CLI build in particular — links
+// without them; the strong Swift definitions override these when present.
+//
+// Same pattern and rationale as `restore_termios` in kernel/exit.c.
 #if __APPLE__
-extern void minis_diag_note_thread_port_acquired(void);
-extern void minis_diag_note_thread_port_released(void);
+__attribute__((weak)) void minis_diag_note_thread_port_acquired(void) {}
+__attribute__((weak)) void minis_diag_note_thread_port_released(void) {}
 #endif
 
 struct rusage_ rusage_get_current() {
